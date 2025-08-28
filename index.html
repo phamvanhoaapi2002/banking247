@@ -1,0 +1,279 @@
+
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PHẠM VĂN HOÀ PRIORITY</title>
+<style>
+:root {
+  --bg-dark:#0f1724; --card-dark:#0b1220; --text-dark:#e6eef6;
+  --bg-light:#f5f5f5; --card-light:#fff; --text-light:#222;
+  --success:#16a34a; --danger:#ef4444; --warn:#9333ea;
+}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg-dark);color:var(--text-dark);transition:.3s}
+body.light{background:var(--bg-light);color:var(--text-light)}
+.wrap{max-width:1200px;margin:0 auto;padding:20px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+.card{background:var(--card-dark);border-radius:14px;padding:16px;transition:.3s}
+body.light .card{background:var(--card-light)}
+
+.logo{display:flex;align-items:center;gap:12px}
+.title-wrap{display:inline-block;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.08);}
+#title{color:#d1d5db;font-weight:900;font-size:16px;margin:0;text-shadow:0 0 6px #d1d5db,0 0 12px #9ca3af;}
+.title-icon{width:26px;height:26px;margin-left:6px}
+
+.balance{font-size:28px;font-weight:800;margin:6px 0 2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+button{padding:10px 12px;border:0;border-radius:10px;font-weight:700;cursor:pointer;transition:.2s}
+.btn.green{background:var(--success);color:#fff}
+.btn.purple{background:var(--warn);color:#fff}
+.btn.sec{background:transparent;border:1px solid rgba(255,255,255,.12);color:inherit}
+.btn.bad{background:var(--danger);color:#fff}
+.small{padding:8px 10px;font-size:14px}
+button:hover{opacity:.9}
+
+label{display:block;margin:8px 0 4px;font-size:13px;color:#94a3b8}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#0b1220;color:#fff;text-transform:uppercase}
+body.light input,body.light select{background:#fff;color:#000;border:1px solid #ccc}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.qr-wrap{display:flex;gap:12px;justify-content:space-between}
+.qr-box{flex:1;border:2px dashed rgba(255,255,255,.12);border-radius:12px;padding:8px;text-align:center;cursor:pointer;transition:.15s}
+.qr-box.active{border:2px solid #22c55e;box-shadow:0 0 10px #22c55e}
+.qr-box img{width:100%;border-radius:8px;background:#fff}
+
+#searchInput{width:100%;padding:8px 10px;margin:10px 0;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#0b1220;color:#fff}
+body.light #searchInput{background:#fff;color:#000;border:1px solid #ccc}
+.table-wrap{max-height:400px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,.06);text-align:left}
+th{position:sticky;top:0;background:rgba(0,0,0,.2)}
+body.light th{background:#f2f2f2}
+.right{text-align:right}
+.tag.in{background:rgba(16,185,129,.15);color:#22c55e;padding:4px 8px;border-radius:6px;font-weight:700}
+.tag.out{background:rgba(248,113,113,.12);color:#f87171;padding:4px 8px;border-radius:6px;font-weight:700}
+.tag.tr{background:rgba(59,130,246,.15);color:#60a5fa;padding:4px 8px;border-radius:6px;font-weight:700}
+.status-ok{color:#22c55e;font-weight:900;text-shadow:0 0 6px #22c55e,0 0 12px #16a34a}
+
+#colorMode{position:absolute;top:18px;right:18px;cursor:pointer;transition:transform .5s ease}
+</style>
+</head>
+<body>
+<svg class="color-mode" height="30" id="colorMode" viewBox="0 0 400 400" width="30">
+  <circle cx="200" cy="200" fill="white" r="195" stroke="#000" stroke-width="10"></circle>
+  <path d="M 200 375 A 175 175 0 0 1 200 25"></path>
+  <path d="M 200 300 A 100 100 0 0 1 200 100" fill="#FFF"></path>
+  <path d="M 200 100 A 100 100 180 0 1 200 300"></path>
+</svg>
+
+<div class="wrap">
+  <!-- Sidebar -->
+  <aside class="card">
+    <div class="logo">
+      <div class="title-wrap"><h1 id="title">PHẠM VĂN HOÀ PRIORITY</h1></div>
+      <img class="title-icon" src="https://khoindvn.io.vn/img/icons/badge.png" alt="icon"/>
+    </div>
+    <div style="margin-top:12px">
+      <div class="sub">Số dư khả dụng</div>
+      <div class="balance" id="balance">0 ₫</div>
+      <div class="sub">Tổng nạp: <span id="totalIn">0 ₫</span> • Tổng rút: <span id="totalOut">0 ₫</span></div>
+      <div class="actions">
+        <button id="openDeposit" class="btn green small">Nạp</button>
+        <button id="openWithdraw" class="btn purple small">Rút</button>
+        <button id="openTransfer" class="btn sec small">Chuyển</button>
+        <button id="btnReset" class="btn bad small">Reset</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="card">
+    <h2>Quản lý giao dịch</h2>
+
+    <!-- Nạp -->
+    <section id="deposit" style="display:none;margin-top:10px">
+      <label>Số tiền (VNĐ)</label>
+      <input id="depAmount" inputmode="numeric"/>
+      <label>Nội dung</label>
+      <input id="depNote" placeholder="Click để tự sinh mã"/>
+      <div class="qr-wrap">
+        <div class="qr-box active" id="qrVCB">
+          <div class="sub">QR Vietcombank</div>
+          <img id="depQR_VCB"/>
+        </div>
+        <div class="qr-box" id="qrTCB">
+          <div class="sub">QR Techcombank</div>
+          <img id="depQR_TCB"/>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="submitDeposit" class="btn green">Xác nhận</button>
+        <button id="cancelDeposit" class="btn sec">Hủy</button>
+      </div>
+    </section>
+
+    <!-- Rút -->
+    <section id="withdraw" style="display:none;margin-top:10px">
+      <label>Ngân hàng</label>
+      <select id="wdBank">
+        <option>VCB - Vietcombank</option>
+        <option>TCB - Techcombank</option>
+        <option>BIDV - BIDV</option>
+        <option>ACB - ACB</option>
+      </select>
+      <div class="input-row">
+        <div><label>Số TK</label><input id="wdAccount"/></div>
+        <div><label>Chủ TK</label><input id="wdOwner"/></div>
+      </div>
+      <label>Số tiền</label>
+      <input id="wdAmount"/>
+      <label>Nội dung</label>
+      <input id="wdNote" placeholder="Click để tự sinh mã"/>
+      <div class="actions">
+        <button id="submitWithdraw" class="btn purple">Rút tiền</button>
+        <button id="cancelWithdraw" class="btn sec">Hủy</button>
+      </div>
+    </section>
+
+    <!-- Chuyển -->
+    <section id="transfer" style="display:none;margin-top:10px">
+      <label>Ngân hàng</label>
+      <select id="tfBank">
+        <option>VCB - Vietcombank</option>
+        <option>TCB - Techcombank</option>
+        <option>BIDV - BIDV</option>
+        <option>ACB - ACB</option>
+      </select>
+      <div class="input-row">
+        <div><label>Số TK</label><input id="tfAccount"/></div>
+        <div><label>Tên TK</label><input id="tfOwner"/></div>
+      </div>
+      <label>Số tiền</label>
+      <input id="tfAmount"/>
+      <label>Nội dung</label>
+      <input id="tfNote" placeholder="Click để tự sinh mã"/>
+      <div class="actions">
+        <button id="submitTransfer" class="btn sec">Chuyển tiền</button>
+        <button id="cancelTransfer" class="btn sec">Hủy</button>
+      </div>
+    </section>
+
+    <!-- Lịch sử -->
+    <input id="searchInput" placeholder="🔍 Tìm giao dịch...">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mã</th><th>Thời gian</th><th>Loại</th><th>Chi tiết</th><th class="right">Số tiền</th><th>Trạng thái</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+let state={balance:0,transactions:[]},depQRSelected="VCB";
+function fmt(n){return (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,",")+" ₫";}
+function parseCurrency(s){return Number(String(s).replace(/[^0-9]/g,''))||0;}
+function randCode(p){return p+Math.floor(10000+Math.random()*89999);}
+function genQR(bank,amt,note){return `https://img.vietqr.io/image/${bank}-default-qr.png?amount=${amt}&addInfo=${encodeURIComponent(note)}&accountName=PHAM%20VAN%20HOA`;}
+
+function refreshDepositQR(){
+  const amt=parseCurrency(depAmount.value);
+  let note=depNote.value||randCode("NAPQR"+depQRSelected);
+  depQR_VCB.src=genQR("VCB",amt,note);
+  depQR_TCB.src=genQR("TCB",amt,note);
+}
+
+function render(){
+  balance.textContent=fmt(state.balance);
+  totalIn.textContent=fmt(state.transactions.filter(t=>t.type==='in').reduce((a,b)=>a+b.amount,0));
+  totalOut.textContent=fmt(state.transactions.filter(t=>t.type==='out').reduce((a,b)=>a+b.amount,0));
+  const q=searchInput.value.toLowerCase();
+  tbody.innerHTML=state.transactions.filter(t=>
+    [t.id,t.time,t.type,t.detail,t.amount].some(v=>String(v).toLowerCase().includes(q))
+  ).map(t=>`
+    <tr>
+      <td>${t.id}</td>
+      <td>${t.time}</td>
+      <td><span class="tag ${t.type}">${t.type}</span></td>
+      <td>${t.detail}</td>
+      <td class="right">${fmt(t.amount)}</td>
+      <td class="status-ok">THÀNH CÔNG !</td>
+    </tr>`).join('');
+}
+
+openDeposit.onclick=()=>{deposit.style.display='block';withdraw.style.display=transfer.style.display='none';}
+openWithdraw.onclick=()=>{withdraw.style.display='block';deposit.style.display=transfer.style.display='none';}
+openTransfer.onclick=()=>{transfer.style.display='block';deposit.style.display=withdraw.style.display='none';}
+cancelDeposit.onclick=()=>deposit.style.display='none';
+cancelWithdraw.onclick=()=>withdraw.style.display='none';
+cancelTransfer.onclick=()=>transfer.style.display='none';
+
+submitDeposit.onclick=()=>{
+  const amt=parseCurrency(depAmount.value);
+  if(amt<200000){alert("Tối thiểu 200K");return;}
+  const note=depNote.value||randCode("NAPQR"+depQRSelected);
+  state.balance+=amt;
+  state.transactions.unshift({id:"IN"+Date.now(),time:new Date().toLocaleString(),type:"in",detail:`${depQRSelected} - ${note}`,amount:amt});
+  render();
+};
+
+submitWithdraw.onclick=()=>{
+  const amt=parseCurrency(wdAmount.value);
+  if(amt<500000){alert("Tối thiểu 500K");return;}
+  if(amt>state.balance){alert("Số dư không đủ");return;}
+  const note=wdNote.value||randCode("RUTBANKING");
+  state.balance-=amt;
+  state.transactions.unshift({id:"OUT"+Date.now(),time:new Date().toLocaleString(),type:"out",
+    detail:`${wdBank.value} - ${wdAccount.value} - ${wdOwner.value} - ${note}`,amount:amt});
+  render();
+};
+
+submitTransfer.onclick=()=>{
+  const amt=parseCurrency(tfAmount.value);
+  if(amt<=0||amt>state.balance){alert("Số dư không đủ");return;}
+  const note=tfNote.value||randCode("CTPVHPRIORITY");
+  state.balance-=amt;
+  state.transactions.unshift({id:"TR"+Date.now(),time:new Date().toLocaleString(),type:"tr",
+    detail:`${tfBank.value} - ${tfAccount.value} - ${tfOwner.value} - ${note}`,amount:amt});
+  render();
+};
+
+// format input số
+function keepCommaInput(el){el.addEventListener("input",()=>{el.value=el.value.replace(/[^0-9]/g,"");if(el.value)el.value=Number(el.value).toLocaleString("en-US");});}
+[depAmount,wdAmount,tfAmount].forEach(keepCommaInput);
+
+// auto sinh note khi click
+depNote.addEventListener("focus",()=>{depNote.value=randCode("NAPQR"+depQRSelected);refreshDepositQR();});
+wdNote.addEventListener("focus",()=>{wdNote.value=randCode("RUTBANKING");});
+tfNote.addEventListener("focus",()=>{tfNote.value=randCode("CTPVHPRIORITY");});
+
+// QR chọn
+qrVCB.onclick=()=>{depQRSelected="VCB";qrVCB.classList.add("active");qrTCB.classList.remove("active");refreshDepositQR();}
+qrTCB.onclick=()=>{depQRSelected="TCB";qrTCB.classList.add("active");qrVCB.classList.remove("active");refreshDepositQR();}
+[depAmount].forEach(el=>el.addEventListener("input",refreshDepositQR));
+searchInput.oninput=render;
+
+// uppercase auto cho tên chủ TK
+[wdOwner,tfOwner].forEach(el=>el.addEventListener("input",()=>{el.value=el.value.toUpperCase();}));
+
+// Theme toggle
+let isLight=false;
+colorMode.onclick=()=>{
+  isLight=!isLight;
+  document.body.classList.toggle("light");
+  colorMode.style.transform=`rotate(${isLight?'-180deg':'180deg'})`;
+};
+
+// ✅ Reset hoạt động
+btnReset.onclick=()=>{
+  if(confirm("Bạn có chắc muốn reset toàn bộ dữ liệu?")){
+    state={balance:0,transactions:[]};
+    render();
+  }
+};
+
+refreshDepositQR();
+render();
+</script>
+</body>
+</html>
